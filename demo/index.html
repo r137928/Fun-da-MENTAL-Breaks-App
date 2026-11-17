@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FUN·da·Mental Breaks | Onboarding demo</title>
+  <link rel="stylesheet" href="/demo.css?v=7">
+  <script src="/demo.js?v=6" type="module"></script>
+</head>
+<body>
+  <header class="top">
+    <button type="button" class="step-back" id="step-back" aria-label="Go back" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+    <a href="/" class="brand" aria-label="FUN·da·Mental Breaks"><span class="wordmark" aria-hidden="true"><span><b>FUN</b><small>·da·</small><b>MENTAL</b></span><strong><i>B</i><i>R</i><i>E</i><i>A</i><i>K</i><i>S</i></strong></span></a>
+    <a class="mode" id="dashboard-link" href="#dashboard">Dashboard</a>
+  </header>
+  <main class="sheet">
+    <aside class="buddy" aria-label="Brain Buddy">
+      <button type="button" class="buddy-art" aria-label="Wave to Brain Buddy" data-action="idle">
+        <img src="/brain-buddy-refined-poster.webp" width="192" height="192" alt="">
+        <canvas width="240" height="240" aria-hidden="true" hidden></canvas>
+      </button>
+      <div class="buddy-copy"><span class="tape">Brain Buddy</span><p id="buddy-note">Hey there! I’m your Brain Buddy.</p></div>
+      <span class="sr-only" id="buddy-announcement" role="status"></span>
+    </aside>
+    <div id="screen"></div>
+    <p id="status" role="status"></p>
+    <div class="page-mark"><progress id="progress" aria-label="Onboarding progress" max="10" value="1"></progress><div class="energy-sticker" aria-hidden="true"><span>Empower you<br>inside out</span></div></div>
+  </main>
+  <footer><span id="connection">Connecting to the backend…</span><button type="button" class="link" id="reset">Restart demo</button></footer>
+  <noscript>This demo requires JavaScript.</noscript>
+</body>
+</html>

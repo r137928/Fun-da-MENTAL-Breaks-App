@@ -1,0 +1,44 @@
+name: fundamental-breaks-demo
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fundamental_demo
+      POSTGRES_PASSWORD: local-demo-only
+    volumes:
+      - sample_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fundamental_demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 25
+  app:
+    image: rust:1-bookworm
+    working_dir: /app/backend
+    command:
+      - bash
+      - -ec
+      - |
+        cargo build --locked --features local-demo
+        /target/debug/fundamental-onboarding migrate
+        exec /target/debug/fundamental-onboarding demo
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      AUTH_ENABLED: "false"
+      CARGO_TARGET_DIR: /target
+      DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
+      MIGRATION_DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
+    volumes:
+      - ..:/app:ro
+      - rust_cache:/usr/local/cargo/registry
+      - build_cache:/target
+    ports:
+      - "127.0.0.1:8765:8080"
+volumes:
+  sample_data:
+  rust_cache:
+    name: fundamental-onboarding-cargo
+  build_cache:
+    name: fundamental-onboarding-target
