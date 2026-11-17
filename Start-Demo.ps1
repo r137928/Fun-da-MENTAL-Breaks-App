@@ -1,11 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $compose = Join-Path $PSScriptRoot 'demo/compose.yml'
-docker compose -f $compose up -d
+docker compose -f $compose up -d --build
 if ($LASTEXITCODE -ne 0) { throw 'Docker could not start the demo. Make sure Docker Desktop is running.' }
 
 $url = 'http://127.0.0.1:8765'
 $deadline = (Get-Date).AddMinutes(20)
-Write-Host 'Waiting for the Rust API. The first build can take several minutes.'
+Write-Host 'Waiting for the TypeScript API. The first build can take several minutes.'
 while ((Get-Date) -lt $deadline) {
     try {
         $ready = Invoke-WebRequest -Uri "$url/ready" -TimeoutSec 3

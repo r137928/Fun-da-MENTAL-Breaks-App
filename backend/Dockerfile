@@ -1,15 +1,25 @@
-FROM rust:1-bookworm AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app/backend
-COPY backend/Cargo.toml backend/Cargo.lock ./
+COPY backend/package.json backend/package-lock.json backend/tsconfig.json ./
+RUN npm ci --ignore-scripts
 COPY backend/src ./src
+RUN npm run build && npm prune --omit=dev --ignore-scripts
+
+FROM node:24-bookworm-slim AS runtime
+WORKDIR /app/backend
+COPY --from=build /app/backend/package.json ./
+COPY --from=build /app/backend/node_modules ./node_modules
+COPY --from=build /app/backend/dist ./dist
 COPY backend/migrations ./migrations
 COPY catalog /app/catalog
-RUN cargo build --release --locked
-
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY --from=build /app/backend/target/release/fundamental-onboarding /usr/local/bin/fundamental-onboarding
-USER 65532:65532
+USER node
 ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/fundamental-onboarding"]
+CMD ["node", "dist/server.js"]
+
+FROM runtime AS demo
+COPY demo /app/demo
+ENV ENABLE_LOCAL_DEMO=true
+CMD ["node", "dist/server.js", "demo"]
+
+FROM runtime AS production

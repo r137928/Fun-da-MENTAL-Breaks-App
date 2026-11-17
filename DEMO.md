@@ -1,8 +1,8 @@
 # Local onboarding demo
 
-Open [the running demo](http://127.0.0.1:8765) on this computer. The browser walkthrough uses the same Rust API and PostgreSQL code as the iPhone integration for saving and restoring the Break Blueprint and first break.
+Open [the running demo](http://127.0.0.1:8765) on this computer. The browser walkthrough uses the TypeScript onboarding API and PostgreSQL to save and restore the Break Blueprint and first break.
 
-Open **Dashboard** for a side-by-side comparison of saved profiles. On a fresh browser, choose **Load two example profiles** on the dashboard to create Alex and Sam. The dashboard reads both profiles and their recent break history from PostgreSQL through the Rust API. **Refresh from backend** fetches both again.
+Open **Dashboard** for a side-by-side comparison of saved profiles. On a fresh browser, choose **Load two example profiles** on the dashboard to create Alex and Sam. The dashboard reads both profiles and their recent break history from PostgreSQL. **Refresh from backend** fetches both again.
 
 Tap Brain Buddy to wave. Brain Buddy cheers when the backend confirms a Blueprint save. With Reduce Motion enabled, both actions show a still response instead.
 

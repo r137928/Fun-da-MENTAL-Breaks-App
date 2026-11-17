@@ -13,32 +13,24 @@ services:
       timeout: 3s
       retries: 25
   app:
-    image: rust:1-bookworm
-    working_dir: /app/backend
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      target: demo
     command:
-      - bash
+      - sh
       - -ec
       - |
-        cargo build --locked --features local-demo
-        /target/debug/fundamental-onboarding migrate
-        exec /target/debug/fundamental-onboarding demo
+        node dist/migrate.js
+        exec node dist/server.js demo
     depends_on:
       db:
         condition: service_healthy
     environment:
       AUTH_ENABLED: "false"
-      CARGO_TARGET_DIR: /target
       DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
       MIGRATION_DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
-    volumes:
-      - ..:/app:ro
-      - rust_cache:/usr/local/cargo/registry
-      - build_cache:/target
     ports:
-      - "127.0.0.1:8765:8080"
+      - "127.0.0.1:${DEMO_PORT:-8765}:8080"
 volumes:
   sample_data:
-  rust_cache:
-    name: fundamental-onboarding-cargo
-  build_cache:
-    name: fundamental-onboarding-target

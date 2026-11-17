@@ -1,4 +1,7 @@
 target/
+node_modules/
+dist/
+.codex-knowledge/
 .env
 .env.*
 !.env.example
