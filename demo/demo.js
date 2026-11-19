@@ -41,6 +41,8 @@ let check;
 let savingBreak = false;
 let comparison = [];
 let dashboardRequest = 0;
+const defaultComparisonCheck = {mind_before: 5, time_bucket: "one_two", vibe_words: ["calm"]};
+let comparisonCheck = {...defaultComparisonCheck};
 
 function initial() {
   return {
@@ -69,10 +71,11 @@ function savedProfiles() {
   try { return JSON.parse(localStorage.getItem(profilesKey)) || []; }
   catch { return []; }
 }
-function rememberProfile(token, account) {
-  const item = {token, id: account.user_id, name: account.blueprint.nickname || "Sample profile"};
+function rememberProfile(token, account, example) {
   const profiles = savedProfiles();
-  const index = profiles.findIndex(profile => profile.id === item.id);
+  const index = profiles.findIndex(profile => profile.id === account.user_id);
+  const item = {token, id: account.user_id, name: account.blueprint.nickname || "Sample profile",
+    example: example ?? profiles[index]?.example};
   if (index < 0) profiles.push(item);
   else profiles[index] = item;
   localStorage.setItem(profilesKey, JSON.stringify(profiles));
@@ -332,10 +335,11 @@ function renderRecommendation() {
     }
   );
   if (best_fit) {
-    const best = optionGroup("Brain Buddy’s Best Fit", [option(best_fit)], "best-fit");
+    const best = document.createElement("div");
+    best.className = "best-fit";
     const why = document.createElement("p");
     why.textContent = recommendationReason(best_fit.reason_code);
-    best.append(why);
+    best.append(optionGroup("Brain Buddy’s Best Fit", [option(best_fit)]), why);
     screen.append(best);
   }
   const columns = document.createElement("div");
@@ -555,10 +559,16 @@ function profileSwitcher() {
 }
 
 async function createExampleProfiles() {
+  const loaded = [];
   for (const example of [
     {preset: "alex", method: "email", goal: "calm", lane: "stillness", activity: "breathing", window: "morning", minutes: "five", tone: "calm"},
     {preset: "sam", method: "phone", goal: "energy", lane: "movement", activity: "walk", window: "afternoon", minutes: "ten_fifteen", tone: "playful"}
   ]) {
+    const existing = savedProfiles().find(profile => profile.example === example.preset);
+    if (existing) {
+      loaded.push(existing);
+      continue;
+    }
     const {token} = await request("/demo/session", "POST", {sample: "adult", contact: {preset: example.preset, method: example.method}}, null);
     const bp = initial().blueprint;
     bp.nickname = presets[example.preset].name;
@@ -575,31 +585,34 @@ async function createExampleProfiles() {
     } : null;
     await request("/v1/me/blueprint", "PUT", {request_id: crypto.randomUUID(), expected_revision: null, blueprint: bp, first_break: first}, token);
     const account = await request("/v1/me", "GET", undefined, token);
-    rememberProfile(token, account);
+    rememberProfile(token, account, example.preset);
+    loaded.push({id: account.user_id, token});
   }
   if (location.hash === "#dashboard") {
-    comparison = savedProfiles().slice(-2).map(profile => profile.id);
+    comparison = loaded.map(profile => profile.id);
+    comparisonCheck = {...defaultComparisonCheck};
     renderDashboard(true);
   } else {
-    await restore(savedProfiles().at(-2).token, true);
+    await restore(loaded[0].token, true);
   }
 }
 
 function renderDashboard(focus = false) {
   const requestId = ++dashboardRequest;
+  let updateBestFit;
   const profiles = savedProfiles();
   comparison = comparison.filter(id => profiles.some(profile => profile.id === id));
   for (const profile of profiles) {
     if (comparison.length === 2) break;
     if (!comparison.includes(profile.id)) comparison.push(profile.id);
   }
-  title("Compare saved profiles", "See each sample user’s Break Blueprint and recent breaks.");
+  title("Compare saved profiles", "See how the same check-in can lead to different breaks.");
   if (focus) screen.querySelector("h1").focus();
   if (profiles.length < 2) {
     const message = document.createElement("p");
     message.textContent = profiles.length ? "Add one more profile to compare two users." : "Save two profiles, or load Alex and Sam to try the dashboard.";
     screen.append(message);
-    actions(button("Load two example profiles", createExampleProfiles), button("Back to demo", closeDashboard, "secondary"));
+    actions(button("Load Alex and Sam", createExampleProfiles), button("Back to demo", closeDashboard, "secondary"));
     if (!profiles.length) return;
   }
 
@@ -618,11 +631,29 @@ function renderDashboard(focus = false) {
         }));
     });
     screen.append(selectors);
-    actions(button("Refresh from backend", () => {
+    actions(button("Load Alex and Sam", createExampleProfiles, "secondary"), button("Refresh from backend", () => {
       renderDashboard();
-      screen.querySelector(".actions button")?.focus();
+      screen.querySelector(".actions button:last-child")?.focus();
     }, "secondary"));
   }
+  const shared = optionGroup("Same check-in", [], "dashboard-checkin");
+  const inputs = document.createElement("div");
+  inputs.className = "columns";
+  inputs.append(
+    picker("Time available", Object.entries(lengths), comparisonCheck.time_bucket, value => {
+      comparisonCheck.time_bucket = value;
+      updateBestFit?.();
+    }),
+    picker("Feeling", catalog.vibes.map(vibe => [vibe, vibe[0].toUpperCase() + vibe.slice(1)]),
+      comparisonCheck.vibe_words[0], value => {
+        comparisonCheck.vibe_words = [value];
+        updateBestFit?.();
+      })
+  );
+  const score = document.createElement("p");
+  score.textContent = "Mind score 5/10.";
+  shared.append(inputs, score);
+  screen.append(shared);
 
   const feedback = document.createElement("p");
   feedback.className = "comparison-feedback";
@@ -641,12 +672,35 @@ function renderDashboard(focus = false) {
     feedback.textContent = loaded === selected.length
       ? "Fresh from PostgreSQL"
       : "Some profiles couldn’t load. Check the connection and try again.";
-    screen.append(comparisonTable(selected, accounts));
+    const table = comparisonTable(selected, accounts);
+    const cells = table.querySelectorAll(".profile-best-fit td");
+    updateBestFit = () => cells.forEach((cell, index) => showComparedBreak(cell, accounts[index]));
+    updateBestFit();
+    screen.append(table);
   });
 }
 
 function closeDashboard() {
   location.hash = "";
+}
+
+function showComparedBreak(cell, account) {
+  if (!account) {
+    cell.textContent = "Unavailable";
+    return;
+  }
+  const {best_fit: result} = recommendBreak(catalog, account.blueprint, comparisonCheck);
+  if (!result) {
+    cell.textContent = "No match for this check-in";
+    return;
+  }
+  const activity = document.createElement("strong");
+  const details = document.createElement("small");
+  const reason = document.createElement("small");
+  activity.textContent = activityName(result);
+  details.textContent = lanes[result.lane] + " · " + durationLabel(result.duration_seconds);
+  reason.textContent = recommendationReason(result.reason_code);
+  cell.replaceChildren(activity, details, reason);
 }
 
 function comparisonTable(profiles, accounts) {
@@ -666,7 +720,11 @@ function comparisonTable(profiles, accounts) {
       const cell = line.insertCell();
       cell.append(value ?? "Unavailable");
     });
+    return line;
   }
+  const bestFit = row("Best Fit", accounts.map(() => ""));
+  bestFit.className = "profile-best-fit";
+  bestFit.setAttribute("aria-live", "polite");
   row("Profile ID", accounts.map(account => account?.user_id.slice(0, 8)));
   row("Demo contact", accounts.map(account => {
     if (!account) return null;
