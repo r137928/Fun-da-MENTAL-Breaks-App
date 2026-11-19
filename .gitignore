@@ -1,0 +1,11 @@
+target/
+node_modules/
+dist/
+.codex-knowledge/
+.env
+.env.*
+!.env.example
+.DS_Store
+DerivedData/
+*.xcodeproj/
+*.xcuserstate

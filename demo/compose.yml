@@ -1,0 +1,36 @@
+name: fundamental-breaks-demo
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fundamental_demo
+      POSTGRES_PASSWORD: local-demo-only
+    volumes:
+      - sample_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fundamental_demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 25
+  app:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      target: demo
+    command:
+      - sh
+      - -ec
+      - |
+        node dist/migrate.js
+        exec node dist/server.js demo
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      AUTH_ENABLED: "false"
+      DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
+      MIGRATION_DATABASE_URL: postgres://postgres:local-demo-only@db:5432/fundamental_demo
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-8765}:8080"
+volumes:
+  sample_data:
