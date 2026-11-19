@@ -4,17 +4,44 @@
     {
       "id": "breathing",
       "name": "Breathing",
-      "lane": "stillness"
+      "lane": "stillness",
+      "recommendation": {
+        "min_seconds": 60,
+        "default_seconds": 120,
+        "max_seconds": 300,
+        "effort": "gentle",
+        "settings": ["seated", "indoors", "outdoors"],
+        "vibes": ["overstimulated", "stressed", "scattered", "tense"],
+        "goals": ["calm", "stress"]
+      }
     },
     {
       "id": "quiet_sit",
       "name": "Quiet sit",
-      "lane": "stillness"
+      "lane": "stillness",
+      "recommendation": {
+        "min_seconds": 60,
+        "default_seconds": 300,
+        "max_seconds": 900,
+        "effort": "gentle",
+        "settings": ["seated", "indoors", "outdoors"],
+        "vibes": ["overstimulated", "stressed", "calm", "grounded"],
+        "goals": ["calm", "balance"]
+      }
     },
     {
       "id": "meditation",
       "name": "Meditation",
-      "lane": "stillness"
+      "lane": "stillness",
+      "recommendation": {
+        "min_seconds": 120,
+        "default_seconds": 300,
+        "max_seconds": 1800,
+        "effort": "gentle",
+        "settings": ["seated", "indoors", "outdoors"],
+        "vibes": ["scattered", "calm", "focused", "grounded"],
+        "goals": ["calm", "focus"]
+      }
     },
     {
       "id": "eyes_closed",
@@ -24,7 +51,17 @@
     {
       "id": "quiet_nature",
       "name": "Quiet time outdoors",
-      "lane": "stillness"
+      "lane": "stillness",
+      "recommendation": {
+        "min_seconds": 120,
+        "default_seconds": 300,
+        "max_seconds": 1800,
+        "effort": "gentle",
+        "settings": ["outdoors"],
+        "setting_required": true,
+        "vibes": ["overstimulated", "stressed", "calm", "grounded"],
+        "goals": ["stress", "balance"]
+      }
     },
     {
       "id": "shower",
@@ -34,12 +71,30 @@
     {
       "id": "walk",
       "name": "Walk",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 60,
+        "default_seconds": 300,
+        "max_seconds": 2400,
+        "effort": "gentle",
+        "settings": ["indoors", "outdoors"],
+        "vibes": ["sluggish", "tired", "stiff", "scattered"],
+        "goals": ["energy", "less_sitting", "balance"]
+      }
     },
     {
       "id": "stretch",
       "name": "Stretch",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 60,
+        "default_seconds": 120,
+        "max_seconds": 900,
+        "effort": "gentle",
+        "settings": ["seated", "indoors", "outdoors"],
+        "vibes": ["tense", "tired", "stiff"],
+        "goals": ["stress", "less_sitting"]
+      }
     },
     {
       "id": "stairs",
@@ -49,22 +104,62 @@
     {
       "id": "dance",
       "name": "Dance",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 120,
+        "default_seconds": 180,
+        "max_seconds": 900,
+        "effort": "moderate",
+        "settings": ["indoors", "outdoors"],
+        "setting_required": true,
+        "vibes": ["sluggish", "focused"],
+        "goals": ["energy", "less_sitting"]
+      }
     },
     {
       "id": "workout",
       "name": "Workout",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 600,
+        "default_seconds": 1200,
+        "max_seconds": 3600,
+        "effort": "high",
+        "settings": ["indoors", "outdoors"],
+        "setting_required": true,
+        "vibes": ["focused", "grounded"],
+        "goals": ["energy", "less_sitting"]
+      }
     },
     {
       "id": "yoga",
       "name": "Yoga",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 300,
+        "default_seconds": 600,
+        "max_seconds": 1800,
+        "effort": "gentle",
+        "settings": ["indoors", "outdoors"],
+        "setting_required": true,
+        "vibes": ["tense", "stiff", "calm"],
+        "goals": ["calm", "stress", "balance"]
+      }
     },
     {
       "id": "outside",
       "name": "Outside play",
-      "lane": "movement"
+      "lane": "movement",
+      "recommendation": {
+        "min_seconds": 300,
+        "default_seconds": 600,
+        "max_seconds": 2400,
+        "effort": "high",
+        "settings": ["outdoors"],
+        "setting_required": true,
+        "vibes": ["focused", "grounded"],
+        "goals": ["energy", "less_sitting"]
+      }
     },
     {
       "id": "organize",

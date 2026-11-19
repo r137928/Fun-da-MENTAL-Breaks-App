@@ -3,6 +3,7 @@ WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json backend/tsconfig.json ./
 RUN npm ci --ignore-scripts
 COPY backend/src ./src
+COPY catalog/recommendations.mjs catalog/recommendations.d.mts /app/catalog/
 RUN npm run build && npm prune --omit=dev --ignore-scripts
 
 FROM node:24-bookworm-slim AS runtime

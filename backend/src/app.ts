@@ -1,9 +1,12 @@
 import Fastify, { type FastifyRequest } from 'fastify';
 import type { Pool } from 'pg';
+import { recommendBreak } from '../../catalog/recommendations.mjs';
 import { Auth, authConfig, bearer } from './auth.js';
 import { authenticateDemo, contactFor, demoRoutes } from './demo.js';
-import { ApiError, CompletedBreakSchema, ProfileInputSchema, SaveBlueprintSchema, parse } from './model.js';
-import { me, save, saveBreak, updateUser } from './store.js';
+import {
+  ApiError, BreakSuggestionInputSchema, CompletedBreakSchema, ProfileInputSchema, SaveBlueprintSchema, catalog, parse,
+} from './model.js';
+import { me, readBlueprint, save, saveBreak, updateUser } from './store.js';
 
 export function createApp(pool: Pool, { demo = false, env = process.env } = {}) {
   const app = Fastify({ bodyLimit: 128 * 1024, logger: false });
@@ -40,6 +43,13 @@ export function createApp(pool: Pool, { demo = false, env = process.env } = {}) 
     parse(ProfileInputSchema, request.body, 'user_profile')));
   app.put('/v1/me/blueprint', async request =>
     save(pool, await user(request), parse(SaveBlueprintSchema, request.body, 'save_request')));
+  app.post('/v1/me/break-suggestions', async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    const account = await user(request);
+    const checkIn = parse(BreakSuggestionInputSchema, request.body, 'break_check_in');
+    const { blueprint, revision } = await readBlueprint(pool, account);
+    return { ...recommendBreak(catalog, blueprint, checkIn), blueprint_revision: revision };
+  });
   app.post('/v1/me/breaks', async request =>
     saveBreak(pool, await user(request), parse(CompletedBreakSchema, request.body, 'completed_break')));
 

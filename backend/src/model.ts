@@ -29,6 +29,7 @@ const hexColor = z.string().regex(/^#[\da-f]{6}$/i);
 const mindScore = int(1, 10);
 const presenceScore = int(0, 100);
 const lane = z.enum(['stillness', 'movement']);
+const setting = z.enum(['seated', 'indoors', 'outdoors']);
 const goal = z.enum(['calm', 'energy', 'stress', 'focus', 'balance', 'less_sitting']);
 const timeBucket = z.enum(['one_two', 'five', 'ten_fifteen', 'twenty_forty_plus']);
 const windows = z.array(z.enum(['morning', 'midday', 'afternoon', 'evening']))
@@ -36,17 +37,40 @@ const windows = z.array(z.enum(['morning', 'midday', 'afternoon', 'evening']))
 const visibility = z.enum(['highlight', 'track', 'hide']);
 
 const catalogItem = z.object({ id: text(80), name: text(100), lane });
+const recommendation = z.strictObject({
+  min_seconds: int(1, 86_400),
+  default_seconds: int(1, 86_400),
+  max_seconds: int(1, 86_400),
+  effort: z.enum(['gentle', 'moderate', 'high']),
+  settings: z.array(setting).min(1).refine(unique),
+  setting_required: z.boolean().optional(),
+  vibes: z.array(z.string()).refine(unique),
+  goals: z.array(goal).refine(unique),
+}).refine(rule => rule.min_seconds <= rule.default_seconds && rule.default_seconds <= rule.max_seconds);
 export const catalogUrl = new URL('../../catalog/v1.json', import.meta.url);
-const catalog = z.object({
+export const catalog = z.object({
   version: int(1),
-  activities: z.array(catalogItem),
+  activities: z.array(catalogItem.extend({ recommendation: recommendation.optional() })),
   bundles: z.array(catalogItem),
   trackers: z.array(z.string()),
   vibes: z.array(z.string()),
-}).parse(JSON.parse(readFileSync(catalogUrl, 'utf8')));
+}).refine(value => value.activities.every(item =>
+  item.recommendation?.vibes.every(vibe => value.vibes.includes(vibe)) ?? true,
+)).parse(JSON.parse(readFileSync(catalogUrl, 'utf8')));
 
 const activities = new Map(catalog.activities.map(item => [item.id, item]));
 const cards = new Set([...catalog.bundles.map(item => item.id), ...catalog.trackers]);
+const vibeWords = z.array(z.string()).max(3)
+  .refine(values => unique(values) && values.every(word => catalog.vibes.includes(word)));
+
+export const BreakSuggestionInputSchema = z.strictObject({
+  mind_before: mindScore.optional(),
+  time_bucket: timeBucket.optional(),
+  available_seconds: int(1, 86_400).optional(),
+  vibe_words: vibeWords.optional(),
+  lane: lane.optional(),
+  setting: setting.optional(),
+});
 
 function unique(values: readonly string[]) {
   return new Set(values).size === values.length;
@@ -185,8 +209,7 @@ export const CompletedBreakSchema = z.strictObject({
   activity,
   duration_seconds: int(1, 86_400),
   time_bucket: timeBucket,
-  vibe_words: z.array(z.string()).max(3)
-    .refine(values => unique(values) && values.every(word => catalog.vibes.includes(word))),
+  vibe_words: vibeWords,
   mind_before: mindScore.nullable().default(null),
   mind_after: mindScore,
   presence_pct: presenceScore,

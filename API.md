@@ -12,6 +12,7 @@ All bodies use JSON and snake case. Timestamps use RFC 3339 in UTC. Dates in pla
 | GET /v1/me | Bearer token | user_id, user, setup_complete, blueprint, revision, recent_breaks |
 | PUT /v1/me/profile | User profile fields | Public User object |
 | PUT /v1/me/blueprint | request_id, expected_revision, blueprint, first_break | revision, break_id |
+| POST /v1/me/break-suggestions | Current check-in | Best Fit, alternatives by lane, and rule/catalog/Blueprint versions |
 | POST /v1/me/breaks | Completed break | break_id, break |
 | DELETE /v1/me | Bearer token | 202, revokes access and queues provider cleanup |
 
@@ -22,6 +23,14 @@ The Blueprint is versioned with `schema_version: 1` and `catalog_version: 1`. It
 On first save, omit `expected_revision` and send the completed onboarding break if available. For an edit, send the current revision and omit `first_break`. Retry an uncertain save with the same request ID and same payload. A 409 means the revision changed or a key was reused with a different payload. Fetch the saved Blueprint before asking the user how to resolve a revision conflict. Import a guest break into an existing account only after the user chooses to import it. Retry a break upload with the original break UUID and payload.
 
 A completed break includes `id`, `completed_at`, `time_zone`, `activity`, `duration_seconds`, `time_bucket`, `vibe_words`, `mind_before`, `mind_after`, `presence_pct`, and `source`. A manual log may omit the before score and use an empty vibe list. The server returns up to 30 recent completed breaks with the account snapshot.
+
+### Personalized breaks
+
+The Break Blueprint stores the user's goal, Stillness or Movement preference (`comfort`), tagged activities, preferred NOW and GOAL lengths, and reminder plan. The latest approved Blueprint supplies the saved preferences for `POST /v1/me/break-suggestions`. The JSON body can include `mind_before` (1–10), `vibe_words` (up to three distinct catalog values), `time_bucket`, `available_seconds` (1–86,400), `setting` (`seated`, `indoors`, or `outdoors`), and an explicit `lane`. A valid request can omit any of these fields, including before the first Blueprint save. When both time inputs are present, the smaller limit applies.
+
+`best_fit` is a suggestion or `null`. `alternatives` holds arrays keyed by `stillness` and `movement`. Each suggestion contains `activity_id`, `lane`, `duration_seconds`, and a `reason_code` for display. The rule filters activities using the available time, confirmed setting, and `not_for_me` tags before ranking them. An explicit lane is required for Best Fit when provided. The other lane remains available as a deliberate choice. The response contains `rule_version`, `catalog_version`, and `blueprint_revision` (`null` before setup).
+
+The recommendation route only reads the caller's Blueprint and returns `Cache-Control: no-store`. The client can use the same catalog and rules for a guest preview. Save the activity the user completes and its actual duration through the existing break endpoints. Keep the usual preferred length, the time available at check-in, and actual completed seconds as distinct values. The weekly plan applies its date override before the usual weekday count and windows. Users can start or log a break at any time.
 
 ### User and Break objects
 

@@ -75,6 +75,17 @@ export async function updateUser(pool: Pool, account: string, profile: ProfileIn
 
 const withBreak = (record: CompletedBreak) => ({ ...record, break: toBreak(record) });
 
+export async function readBlueprint(pool: Pool, account: string) {
+  const { rows } = await pool.query<{ revision: string | null; document: Blueprint | null }>(
+    'SELECT b.revision, b.document FROM onboarding.accounts a ' +
+    'LEFT JOIN onboarding.blueprints b ON b.user_id = a.id ' +
+    "WHERE a.id = $1 AND a.status = 'active'", [account],
+  );
+  const row = rows[0];
+  if (!row) throw unauthorized();
+  return { revision: row.revision === null ? null : Number(row.revision), blueprint: row.document };
+}
+
 export async function me(pool: Pool, account: string) {
   return transaction(pool, async client => {
     const setup_complete = await lockActive(client, account);

@@ -9,10 +9,10 @@ Tap Brain Buddy to wave. Brain Buddy cheers when the backend confirms a Blueprin
 To build profiles live:
 
 1. Pick **Sample adult** or **Sample teen**. Enter a fictional name and choose a sample email or phone number.
-2. Choose a goal, adjust the NOW and GOAL scores, and set a break style, activities, preferred length, reminder windows, and Brain Buddy tone.
-3. Select **Try my first break**. Run the 10-second timer or tap **End and check out**. Finish the break as a guest.
+2. Choose a goal, adjust the NOW and GOAL scores, and set a break style, activities, and preferred length. Set a weekly rhythm and review the daily counts and reminder windows before saving.
+3. Select **Try my first break**. Enter how you feel, how much time you have, and what you can do where you are. Review Best Fit and its reason, then start it or choose another activity. Let the timer finish or tap **End and check out**. Finish the break as a guest.
 4. Select **Save Blueprint + first break**. The saved screen reads back revision 1 and one break. **Retry original save** keeps the revision and break count the same.
-5. Choose **Add another profile** and save a different set of answers. Switch between the two saved profiles to show each account's own history. The browser remembers the demo sessions, so profiles created in another browser have their own switcher.
+5. Use **Start a new break** and try a different check-in. The selection uses the saved Blueprint and the new check-in. Use **Edit my Blueprint** to adjust preferences or the weekly plan. Choose **Add another profile** to try a different set of preferences and compare histories. The browser remembers the demo sessions, so profiles created in another browser have their own switcher.
 6. Choose **Sample child (under 13)** from the start screen to show the eligibility stop.
 
 The demo service is bound locally and can be shared through the temporary HTTPS tunnel when it is running. It uses fictional age profiles and contact presets, a separate sample account for each walkthrough, and a dedicated local database. The browser shows the reminder plan. Notification delivery, Apple age assurance, and live sign-in belong to the iPhone and staging builds.

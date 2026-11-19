@@ -73,6 +73,13 @@ test('migrates existing records and keeps demo saves, retries and schema objects
     });
     assert.equal(started.statusCode, 200, started.body);
     const headers = { authorization: 'Bearer ' + started.json().token };
+    const suggestions = (input: Record<string, unknown>) => app.inject({
+      method: 'POST', url: '/v1/me/break-suggestions', headers, payload: input,
+    });
+    const beforeSetup = await suggestions({});
+    assert.equal(beforeSetup.statusCode, 200, beforeSetup.body);
+    assert.equal(beforeSetup.json().blueprint_revision, null);
+    assert.equal(beforeSetup.headers['cache-control'], 'no-store');
     const draft = { request_id: randomUUID(), blueprint, first_break: record };
     const saves = await Promise.all([0, 1].map(() => app.inject({
       method: 'PUT', url: '/v1/me/blueprint', headers, payload: draft,
@@ -81,6 +88,12 @@ test('migrates existing records and keeps demo saves, retries and schema objects
       assert.equal(response.statusCode, 200, response.body);
       assert.deepEqual(response.json(), { revision: 1, break_id: record.id });
     }
+    const ranked = await suggestions({ mind_before: 6, time_bucket: 'one_two', vibe_words: ['sluggish'] });
+    assert.equal(ranked.statusCode, 200, ranked.body);
+    assert.equal(ranked.json().blueprint_revision, 1);
+    assert.equal(ranked.json().best_fit.activity_id, 'walk');
+    assert.ok(ranked.json().best_fit.duration_seconds <= 120);
+    assert.equal((await suggestions({ mind_before: 11 })).statusCode, 422);
     const conflict = await app.inject({ method: 'PUT', url: '/v1/me/blueprint', headers,
       payload: { ...draft, blueprint: { ...blueprint, goal: 'focus' } } });
     assert.equal(conflict.statusCode, 409);
@@ -107,6 +120,7 @@ test('migrates existing records and keeps demo saves, retries and schema objects
       payload: { ...next, break: { ...next.break, duration: 120 } } });
     assert.equal(mismatched.statusCode, 422);
     assert.equal((await app.inject({ url: '/' })).statusCode, 200);
+    assert.match((await app.inject({ url: '/recommendations.mjs' })).headers['content-type'] ?? '', /javascript/);
     assert.equal((await app.inject({ url: '/ready' })).statusCode, 204);
 
     const { privateKey, publicKey } = await generateKeyPair('ES256');

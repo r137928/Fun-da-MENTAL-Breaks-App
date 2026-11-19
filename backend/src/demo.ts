@@ -38,6 +38,8 @@ export function demoRoutes(app: FastifyInstance, pool: Pool) {
   }
   app.get('/catalog.json', async (_request, reply) =>
     reply.type('application/json').send(await readFile(catalogUrl)));
+  app.get('/recommendations.mjs', async (_request, reply) => reply.type('text/javascript; charset=utf-8')
+    .send(await readFile(new URL('../../catalog/recommendations.mjs', import.meta.url))));
   app.post('/demo/session', request => createSession(pool, request.body));
 }
 
