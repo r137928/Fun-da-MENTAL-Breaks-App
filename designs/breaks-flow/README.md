@@ -1,4 +1,4 @@
-# Break Flow Designs (Mia)
+# Break Flow Designs: Mia and Andrea
 
 Figma board of Andrea and Mia's work for breaks flow wireframes: 
 https://www.figma.com/design/8MqpQ5epphHlsjgUowT20q/Breaks-Flow-Prototyping?node-id=4005-174&t=FAPsR0r0lHQ3LRun-1
